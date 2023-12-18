@@ -35,17 +35,21 @@ ArrayShape(a::HexArray, I::Type{<:HexIndex}) = reindex(ArrayShape(a), I)
 # HexagonHexArray
 ########################################
 
-struct HexagonHexArray{T, I} <: HexArray{T, I}
+struct HexagonHexArray{T, I, A<:AbstractMatrix} <: HexArray{T, I}
 	shape::HexagonShape{I}
-	array::Matrix{T}
+	array::A
+
+	function HexagonHexArray(shape::HexagonShape, array::AbstractMatrix)
+		return new{eltype(array), eltype(shape), typeof(array)}(shape, array)
+	end
 end
 
 function HexagonHexArray{T}(shape::HexagonShape{I}) where {T, I}
 	w = 2 * shape.n - 1
 	array = Matrix{T}(undef, w, w)
-	return HexagonHexArray{T, I}(shape, array)
+	return HexagonHexArray(shape, array)
 end
-HexagonHexArray{T, I}(n::Int) where {T, I} = HexagonHexArray{T, I}(HexagonShape(n))
+HexagonHexArray{T, I}(n::Int) where {T, I} = HexagonHexArray{T}(HexagonShape{I}(n))
 HexagonHexArray{T}(n::Int) where T = HexagonHexArray{T, AxialIndex}(n)
 
 ArrayShape(a::HexagonHexArray) = a.shape

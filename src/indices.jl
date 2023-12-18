@@ -40,6 +40,20 @@ Get cartesian coordinates of cell center.
 function cartesian end
 
 
+"""
+	cartesian_array(indices)::Matrix{Float64}
+
+Get the x/y coordinates of a collection of indices as a 2-column matrix.
+"""
+function cartesian_array(indices)
+	xy = Array{Float64}(undef, length(indices), 2)
+	for (i, idx) in enumerate(indices)
+		xy[i, :] .= cartesian(idx)
+	end
+	return xy
+end
+
+
 ########################################
 # VectorHexIndex
 ########################################
