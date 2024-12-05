@@ -1,7 +1,7 @@
 using Test
 using HexGrids
 
-using HexGrids: neighbors, isneighbor, hexaxes, cartesian, validindex, root32
+using HexGrids: neighbors, isneighbor, hexaxes, cartesian, validindex, root32, VectorHexIndex
 using HexGrids: ArrayShape, HexagonShape, HexagonHexArray, reindex
 
 

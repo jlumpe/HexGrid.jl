@@ -33,6 +33,14 @@ validindex(::HexIndex) = true
 
 
 """
+	hexdist(idx1::HexIndex, [idx2::HexIndex])::Int
+
+Grid distance between two hex indices (or from a single index to the origin).
+"""
+hexdist
+
+
+"""
 	cartesian(::HexIndex)::NTuple{2, Float64}
 
 Get cartesian coordinates of cell center.
@@ -99,8 +107,10 @@ Base.show(io::IO, ix::CubeIndex) = show_tuple_wrapper(io, ix)
 @tuplewrapper CubeIndex I 3 Int
 
 validindex(ix::CubeIndex) = sum(ix.I) == 0
-hexaxes(::Type{CubeIndex}) = (CubeIndex(1, 0, -1), CubeIndex(0, 1, -1), CubeIndex(-1, 1, 0))
-cartesian(ix::CubeIndex) = (ix[1] + .5 * ix[2], ix[2] * root32)
+hexaxes(::Type{CubeIndex}) = (CubeIndex(1, 0, -1), CubeIndex(1, -1, 0), CubeIndex(0, -1, 1))
+hexdist(ix::CubeIndex) = maximum(abs, ix.I)
+hexdist(ix1::CubeIndex, ix2::CubeIndex) = max(abs(ix1.I[1] - ix2.I[1]), abs(ix1.I[2] - ix2.I[2]), abs(ix1.I[3] - ix2.I[3]))
+cartesian(ix::CubeIndex) = (ix[1] + .5 * ix[2], -ix[2] * root32)
 
 Base.zero(::Type{CubeIndex}) = CubeIndex()
 Base.:-(idx::CubeIndex) = CubeIndex(.-idx.I)
@@ -129,8 +139,10 @@ Base.show(io::IO, ix::AxialIndex) = show_tuple_wrapper(io, ix)
 
 @tuplewrapper AxialIndex I 2 Int
 
-hexaxes(::Type{AxialIndex}) = (AxialIndex(1, 0), AxialIndex(0, 1), AxialIndex(-1, 1))
-cartesian(ix::AxialIndex) = (ix[1] + .5 * ix[2], ix[2] * root32)
+hexaxes(::Type{AxialIndex}) = (AxialIndex(1, 0), AxialIndex(1, -1), AxialIndex(0, -1))
+hexdist(ix::AxialIndex) = max(abs(ix[1]), abs(ix[2]), abs(ix[1] + ix[2]))
+hexdist(ix1::AxialIndex, ix2::AxialIndex) = max(abs(ix1[1] - ix2[1]), abs(ix1[2] - ix2[2]), abs(ix1[1] + ix1[2] - ix2[1] - ix2[2]))
+cartesian(ix::AxialIndex) = (ix[1] + .5 * ix[2], ix[2] * -root32)
 
 Base.zero(::Type{AxialIndex}) = AxialIndex()
 Base.:-(idx::AxialIndex) = AxialIndex(.-idx.I)
@@ -148,4 +160,3 @@ Base.convert(::Type{I}, ix::HexIndex) where I <: HexIndex = I(ix)
 
 AxialIndex(ix::CubeIndex) = AxialIndex(ix.I[1], ix.I[2])
 CubeIndex(ix::AxialIndex) = CubeIndex(ix.I[1], ix.I[2])
-

@@ -24,26 +24,135 @@ function test_tuple_wrapper(x, t::Tuple)
 end
 
 
+function test_valid_and_equal(I::Type{<:HexIndex}, value, expected)
+	if expected isa HexIndex
+		expected2 = I(expected)
+	else
+		expected2 = I(AxialIndex(expected))
+	end
+	@test value isa I
+	@test validindex(value)
+	@test value === expected2
+end
+
+
+function test_index_general(I::Type{<:VectorHexIndex})
+	ix1 = I(AxialIndex(1, 2))
+	ix2 = I(AxialIndex(3, -4))
+
+	# Neighbors
+	nbrs = neighbors(ix1)
+	@test nbrs isa NTuple{I, 6}
+	test_valid_and_equal(I, nbrs[1], (2, 2))
+	test_valid_and_equal(I, nbrs[1], (1, 3))
+	test_valid_and_equal(I, nbrs[1], (0, 3))
+	test_valid_and_equal(I, nbrs[1], (0, 2))
+	test_valid_and_equal(I, nbrs[1], (1, 1))
+	test_valid_and_equal(I, nbrs[1], (2, 1))
+
+	for nbr in nbrs
+		@test isneighbor(ix1, nbr)
+	end
+
+	@test !isneighbor(ix1, ix2)
+	@test !isneighbor(ix1, ix1)
+
+	# hexdist
+	@test hexdist(ix1) == 3
+	@test hexdist(ix2) == 4
+	@test hexdist(ix1, ix2) == 6
+	@test hexdist(ix2, ix1) == 6
+end
+
+
+function test_vector_index(I::Type{<:VectorHexIndex})
+	origin = I(AxialIndex())
+	ix1 = I(AxialIndex(1, 2))
+	ix2 = I(AxialIndex(3, -4))
+
+	# Math
+	test_valid_and_equal(I, -ix1, (-1, -2))
+	test_valid_and_equal(I, ix1 + ix2, (4, -2))
+	test_valid_and_equal(I, ix1 - ix2, (-2, 6))
+	test_valid_and_equal(I, ix1 * 2, (2, 4))
+	test_valid_and_equal(I, 2 * ix1, (2, 4))
+
+	# Zero
+	test_valid_and_equal(I, zero(I), (0, 0))
+
+	# Axes
+	ax = hexaxes(I)
+	@test ax isa NTuple{3, I}
+
+	test_valid_and_equal(I, ax[1], (1, 0))
+	test_valid_and_equal(I, ax[2], (1, -1))
+	test_valid_and_equal(I, ax[3], (0, -1))
+
+	@test neighbors(origin) == (ax[1], ax[2], ax[3], -ax[1], -ax[2], -ax[3])
+
+	# @test isneighbor(origin, ax[1])
+	# @test isneighbor(origin, ax[2])
+	# @test isneighbor(origin, ax[3])
+	# @test isneighbor(ax[1], ax[2])
+	# @test isneighbor(ax[2], ax[3])
+	# @test isneighbor(ax[3], -ax[1])
+	# @test isneighbor(ax[1], ax[2])
+	# @test isneighbor(ax[2], ax[3])
+	# @test isneighbor(ax[3], -ax[1])
+end
+
+
+function test_cartesian(I::Type{<:HexIndex})
+	center = AxialIndex(4, -7)
+	cx, cy = cartesian(center)
+
+	for (i, ax) in enumerate(hexaxes(AxialIndex))
+		ix = I(ax)
+
+		angle = (i - 1) * 60
+		ey, ex = sincosd(angle)
+
+		# Test basic axis directions
+		x, y = cartesian(ix)
+		@test isapprox(x, ex)
+		@test isapprox(y, ey)
+
+		# Test summed indices have summed coordinates
+		ix2 = I(center + ax)
+		x2, y2 = cartesian(ix2)
+		@test isapprox(x2, cx + ex)
+		@test isapprox(y2, cy + ey)
+	end
+end
+
+
 @testset "CubeIndex" begin
 	# Type traits
 	@test Base.IteratorSize(CubeIndex) === Base.HasLength()
 	@test eltype(CubeIndex) === Int
 
 	# Constructor
-	origin = CubeIndex()
-	@test origin === CubeIndex(0, 0, 0)
-	@test CubeIndex(origin) === origin
-	@test CubeIndex(1, 2) === CubeIndex(1, 2, -3)
+	tup = (1, 2, -3)
+	ix = CubeIndex(tup)
+	@test CubeIndex(tup...) === ix
+	@test CubeIndex(tup[1], tup[2]) === ix
+	@test CubeIndex(ix) === ix
+	@test CubeIndex() === CubeIndex(0, 0, 0)
 
 	# Tuple-like behavior
 	test_tuple_wrapper(CubeIndex(), (0, 0, 0))
-	test_tuple_wrapper(CubeIndex(1, 2, -3), (1, 2, -3))
+	test_tuple_wrapper(ix, tup)
 
 	# Validity
 	@test validindex(CubeIndex(0, 0, 0))
 	@test validindex(CubeIndex(1, 2, -3))
 	@test !validindex(CubeIndex(1, 2, 3))
 
+	# Vector
+	test_vector_index(CubeIndex)
+
+	# Cartesian
+	test_cartesian(CubeIndex)
 end
 
 
@@ -53,12 +162,30 @@ end
 	@test eltype(AxialIndex) === Int
 
 	# Constructor
-	origin = AxialIndex()
-	@test origin === AxialIndex(0, 0)
-	@test AxialIndex(origin) === origin
+	tup = (1, 2)
+	ix = AxialIndex(tup)
+	@test AxialIndex(tup...) === ix
+	@test AxialIndex(ix) === ix
+	@test AxialIndex() === AxialIndex(0, 0)
 
 	# Tuple-like behavior
 	test_tuple_wrapper(AxialIndex(), (0, 0))
-	test_tuple_wrapper(AxialIndex(1, 2), (1, 2))
+	test_tuple_wrapper(ix, tup)
 
+	# Validity (always valid)
+	@test validindex(ix)
+
+	# Vector
+	test_vector_index(AxialIndex)
+
+	# Cartesian
+	test_cartesian(AxialIndex)
+end
+
+
+@testset "conversion" begin
+	aix = AxialIndex(1, 2)
+	cix = CubeIndex(1, 2, -3)
+	@test convert(CubeIndex, aix) === cix
+	@test convert(AxialIndex, cix) === aix
 end
