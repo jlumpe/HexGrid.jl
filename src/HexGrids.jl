@@ -6,6 +6,7 @@ module HexGrids
 using Requires
 
 export HexIndex, AxialIndex, CubeIndex, neighbors
+export ArrayShape, HexagonShape, HexArray, HexagonHexArray
 
 
 const root32 = sqrt(3) / 2
