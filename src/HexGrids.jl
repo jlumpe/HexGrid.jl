@@ -16,9 +16,7 @@ include("indices.jl")
 include("shape.jl")
 include("array.jl")
 
-# function __init__()
-# 	@require PlotlyJS="f0f68f2c-4968-5e81-91da-67840de0976a" include("Plotly.jl")
-# end
+include("Plotly.jl")
 
 
 end # module HexGrids
