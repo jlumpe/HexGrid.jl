@@ -1,6 +1,6 @@
 name = "HexGrids"
 uuid = "958768e3-a6c4-4c00-bfc1-a372889203e3"
-authors = ["Jared Lumpe <mjlumpe@gmail.com>"]
+authors = ["Jared Lumpe <jared@jaredlumpe.com>"]
 version = "0.1.0"
 
 [deps]
