@@ -7,7 +7,7 @@ using StaticArrays
 
 export HexIndex, AxialIndex, CubeIndex
 export validindex, isneighbor, neighbors, hexdist, hexaxes
-export ArrayShape, HexagonShape, HexArray, HexagonHexArray
+export ArrayShape, HexagonShape, HexArray, HexagonArray
 
 
 const root32 = sqrt(3) / 2
