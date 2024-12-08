@@ -58,12 +58,12 @@ function cartesian end
 """
 	cartesian_array(indices)::Matrix{Float64}
 
-Get the x/y coordinates of a collection of indices as a 2-column matrix.
+Get the x/y coordinates of a collection of indices as a 2-row matrix.
 """
 function cartesian_array(indices)
-	xy = Array{Float64}(undef, length(indices), 2)
+	xy = Array{Float64}(undef, 2, length(indices))
 	for (i, idx) in enumerate(indices)
-		xy[i, :] .= cartesian(idx)
+		xy[:, i] .= cartesian(idx)
 	end
 	return xy
 end
