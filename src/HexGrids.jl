@@ -3,8 +3,6 @@ Package for working with hexagonal grids.
 """
 module HexGrids
 
-using Requires
-
 export HexIndex, AxialIndex, CubeIndex, neighbors
 export ArrayShape, HexagonShape, HexArray, HexagonHexArray
 
