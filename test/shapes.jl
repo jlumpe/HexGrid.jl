@@ -18,7 +18,6 @@
 		@test ix in shape
 		@test validindex(shape, ix)
 		ix2 = CubeIndex(ix)
-		@test !(ix2 in shape)
 		@test validindex(shape, ix2)
 	end
 

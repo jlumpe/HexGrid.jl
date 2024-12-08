@@ -24,6 +24,9 @@ function test_tuple_wrapper(x, t::Tuple)
 end
 
 
+"""
+Test value is a valid index of type I and equal to expected.
+"""
 function test_valid_and_equal(I::Type{<:HexIndex}, value, expected)
 	if expected isa HexIndex
 		expected2 = I(expected)
@@ -199,4 +202,26 @@ end
 	cix = CubeIndex(1, 2, -3)
 	@test convert(CubeIndex, aix) === cix
 	@test convert(AxialIndex, cix) === aix
+end
+
+
+@testset "promotion" begin
+	left = AxialIndex(1, 2)
+	right = AxialIndex(2, -3)
+	expect_sum = AxialIndex(3, -1)
+	expect_diff = AxialIndex(-1, 5)
+
+	left_types = [AxialIndex, CubeIndex]
+	right_types = [AxialIndex, CubeIndex]
+
+	for L in left_types
+		for R in right_types
+			@test convert(L, left) == convert(R, left)
+
+			left2 = convert(L, left)
+			right2 = convert(R, right)
+			test_valid_and_equal(L, left2 + right2, expect_sum)
+			test_valid_and_equal(L, left2 - right2, expect_diff)
+		end
+	end
 end

@@ -75,6 +75,10 @@ end
 
 """
 Index type which behaves as a vector, more or less (supports addition and scaling by integer values).
+
+Vector indices can act as an offset, and added to / subtracted from any index of any type, with
+the generic index on the left an the vector index on the right. The result will have the type of the
+index on the left.
 """
 abstract type VectorHexIndex <: HexIndex end
 
@@ -176,10 +180,20 @@ neighbors(ix::AxialIndex) = ix .+ AXIAL_NEIGHBORS
 
 
 ########################################
-# Conversions
+# Conversion and promotion
 ########################################
 
 Base.convert(::Type{I}, ix::HexIndex) where I <: HexIndex = I(ix)
 
 AxialIndex(ix::CubeIndex) = AxialIndex(ix.I[1], ix.I[2])
 CubeIndex(ix::AxialIndex) = CubeIndex(ix.I[1], ix.I[2])
+
+# Promote to AxialIndex by default if different
+
+# Equality by conversion to AxialIndex
+Base.:(==)(ix1::HexIndex, ix2::HexIndex) = AxialIndex(ix1) == AxialIndex(ix2)
+
+# Right-addition/subtraction by vector index, preserving type of left
+# Do by conversion to AxialIndex
+Base.:+(ix1::L, ix2::VectorHexIndex) where {L <: HexIndex} = convert(L, convert(AxialIndex, ix1) + convert(AxialIndex, ix2))
+Base.:-(ix1::L, ix2::VectorHexIndex) where {L <: HexIndex} = convert(L, convert(AxialIndex, ix1) - convert(AxialIndex, ix2))
