@@ -1,36 +1,68 @@
 
+"""
+Test container-like aspects of a HexShape:
+
+- Iteration gives unique, valid indices of type I.
+- Total iterated matches length.
+- in()
+"""
+function test_shape_container(shape::ArrayShape{I}) where I
+	@test eltype(shape) === I
+
+	seen = Set{I}()
+
+	for ix in shape
+		@test ix isa I
+		@test validindex(ix)
+		@test ix ∉ seen
+		push!(seen, ix)
+	end
+
+	@test length(seen) == length(shape)
+end
+
 
 @testset "HexagonShape" begin
 
-	# Constructor
+	# Default index type
 	@test HexagonShape(3) === HexagonShape{AxialIndex}(3)
+	# Size must be positive
 	@test_throws ArgumentError HexagonShape(0)
 
-	# Shape with n=2 (7 cells)
-	shape = HexagonShape(2)
-	@test length(shape) == 7
-	@test eltype(shape) === AxialIndex
+	# Different index types and sizes
+	for I in [CubeIndex, AxialIndex]
+		for n in [1, 3, 6]
+			s = HexagonShape{I}(n)
+			test_shape_container(s)
 
-	expected_idxs = map(AxialIndex, [(0, 0), (-1, 0), (1, 0), (0, -1), (0, 1), (-1, 1), (1, -1)])
-	@test issetequal(collect(shape), expected_idxs)
-
-	for ix in expected_idxs
-		@test ix in shape
-		@test validindex(shape, ix)
-		ix2 = CubeIndex(ix)
-		@test validindex(shape, ix2)
+			# One past the "tip" of hexagon on axis 1
+			ax1 = hexaxes(I, 1)
+			@test (ax1 * n) ∉ s
+		end
 	end
 
-	@test !(AxialIndex(2, 0) in shape)
-	@test !validindex(shape, AxialIndex(2, 0))
+	# Text neighbors
+	s = HexagonShape{AxialIndex}(3)
 
-	expected_neighbors = map(AxialIndex, [(0, 0), (0, 1), (1, -1)])
-	@test issetequal(neighbors(shape, AxialIndex(1, 0)), expected_neighbors)
+	# Cell 1 on edge
+	ix1 = AxialIndex(2, -1)
+	@test ix1 in s
+	nbrs1 = collect(neighbors(s, ix1))
+	expected1 = AxialIndex.([(2, -2), (1, -1), (1, 0), (2, 0)])
+	@test issetequal(nbrs1, expected1)
+
+	# Cell 2 outside edge
+	ix2 = AxialIndex(3, -1)
+	@test ix2 ∉ s
+	nbrs2 = collect(neighbors(s, ix2))
+	expected2 = AxialIndex.([(2, -1), (2, 0)])
+	@test issetequal(nbrs2, expected2)
+
+	# Cell 3 further outside
+	ix3 = AxialIndex(4, -1)
+	@test ix3 ∉ s
+	@test isempty(neighbors(s, ix3))
 
 	# Reindexing
-	shape2 = reindex(shape, CubeIndex)
-	@test shape2 === HexagonShape{CubeIndex}(shape.n)
-	@test eltype(shape2) === CubeIndex
-	@test issetequal(shape2, map(CubeIndex, expected_idxs))
-
+	@test reindex(s, CubeIndex) === HexagonShape{CubeIndex}(3)
 end
