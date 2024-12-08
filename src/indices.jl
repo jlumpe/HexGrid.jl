@@ -8,6 +8,11 @@ Index for a cell in a hexagonal grid.
 abstract type HexIndex end
 
 
+# Treat as a scalar for broadcasting
+# (similar behavior to CartesianIndex).
+Base.broadcastable(ix::HexIndex) = Ref(ix)
+
+
 """
 	neighbors(::T) where T <: HexIndex
 
@@ -131,7 +136,7 @@ const CUBE_AXES = CUBE_NEIGHBORS[SA[1, 2, 3]]
 
 hexaxes(::Type{CubeIndex}) = CUBE_AXES
 hexaxes(::Type{CubeIndex}, i::Integer) = CUBE_AXES[i]
-neighbors(ix::CubeIndex) = Ref(ix) .+ CUBE_NEIGHBORS
+neighbors(ix::CubeIndex) = ix .+ CUBE_NEIGHBORS
 
 
 ########################################
@@ -167,7 +172,7 @@ const AXIAL_AXES = AXIAL_NEIGHBORS[SA[1, 2, 3]]
 
 hexaxes(::Type{AxialIndex}) = AXIAL_AXES
 hexaxes(::Type{AxialIndex}, i::Integer) = AXIAL_AXES[i]
-neighbors(ix::AxialIndex) = Ref(ix) .+ AXIAL_NEIGHBORS
+neighbors(ix::AxialIndex) = ix .+ AXIAL_NEIGHBORS
 
 
 ########################################
