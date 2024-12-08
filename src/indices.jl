@@ -9,7 +9,7 @@ abstract type HexIndex end
 
 
 """
-	neighbors(::T)::NTuple{6, T} where T <: HexIndex
+	neighbors(::T) where T <: HexIndex
 
 Get the 6 neighbors of a hex cell given its index.
 """
@@ -17,11 +17,11 @@ function neighbors end
 
 
 """
-	isneighbor(::HexIndex, ::HexIndex)::Bool
+	isneighbor(ix1::HexIndex, ix2::HexIndex)::Bool
 
 Check if two cells are neighbors.
 """
-function isneighbor end
+isneighbor(ix1::HexIndex, ix2::HexIndex) = hexdist(ix1, ix2) == 1
 
 
 """
@@ -36,6 +36,8 @@ validindex(::HexIndex) = true
 	hexdist(idx1::HexIndex, [idx2::HexIndex])::Int
 
 Grid distance between two hex indices (or from a single index to the origin).
+
+This is the minimum number of jumps between neighbors to get from one cell to another.
 """
 hexdist
 
@@ -73,18 +75,22 @@ abstract type VectorHexIndex <: HexIndex end
 
 
 """
-	hexaxes(::Type{T})::NTuple{3, T} where T <: VectorHexIndex
+	hexaxes(::Type{T}) where T <: VectorHexIndex
 
-Indices representing unit vectors along the three main axes.
+Get indices representing unit vectors along the three main axes.
 
 Axes are 0, 60, and 120 degrees from Cartesian x axis.
 """
 function hexaxes end
 
+
 function neighbors(ix::T) where T <: VectorHexIndex
 	a, b, c = hexaxes(T)
-	return (ix + a, ix + b, ix + c, ix - a, ix - b, ix - c)
+	return @SArray T[ix + a, ix + b, ix + c, ix - a, ix - b, ix - c]
 end
+
+
+hexdist(ix1::VectorHexIndex, ix2::VectorHexIndex) = hexdist(ix1 - ix2)
 
 
 ########################################
@@ -102,14 +108,11 @@ CubeIndex(x::Integer, y::Integer, z::Integer=-(x+y)) = CubeIndex((Int(x), Int(y)
 CubeIndex() = CubeIndex(0, 0, 0)
 CubeIndex(ix::CubeIndex) = ix
 
-Base.show(io::IO, ix::CubeIndex) = show_tuple_wrapper(io, ix)
-
 @tuplewrapper CubeIndex I 3 Int
 
 validindex(ix::CubeIndex) = sum(ix.I) == 0
-hexaxes(::Type{CubeIndex}) = (CubeIndex(1, 0, -1), CubeIndex(1, -1, 0), CubeIndex(0, -1, 1))
-hexdist(ix::CubeIndex) = maximum(abs, ix.I)
-hexdist(ix1::CubeIndex, ix2::CubeIndex) = max(abs(ix1.I[1] - ix2.I[1]), abs(ix1.I[2] - ix2.I[2]), abs(ix1.I[3] - ix2.I[3]))
+hexdist(ix::CubeIndex) = maximum(abs, ix)
+hexdist(ix1::CubeIndex, ix2::CubeIndex) = max(abs(ix1[1] - ix2[1]), abs(ix1[2] - ix2[2]), abs(ix1[3] - ix2[3]))
 cartesian(ix::CubeIndex) = (ix[1] + .5 * ix[2], -ix[2] * root32)
 
 Base.zero(::Type{CubeIndex}) = CubeIndex()
@@ -118,6 +121,17 @@ Base.:+(a::CubeIndex, b::CubeIndex) = CubeIndex(a.I .+ b.I)
 Base.:-(a::CubeIndex, b::CubeIndex) = CubeIndex(a.I .- b.I)
 Base.:*(a::Integer, ix::CubeIndex) = CubeIndex(ix.I .* a)
 Base.:*(ix::CubeIndex, a::Integer) = CubeIndex(ix.I .* a)
+
+const CUBE_NEIGHBORS = @SArray [
+	CubeIndex(1, 0, -1), CubeIndex(1, -1, 0), CubeIndex(0, -1, 1),
+	CubeIndex(-1, 0, 1), CubeIndex(-1, 1, 0), CubeIndex(0, 1, -1),
+]
+
+const CUBE_AXES = CUBE_NEIGHBORS[SA[1, 2, 3]]
+
+hexaxes(::Type{CubeIndex}) = CUBE_AXES
+hexaxes(::Type{CubeIndex}, i::Integer) = CUBE_AXES[i]
+neighbors(ix::CubeIndex) = Ref(ix) .+ CUBE_NEIGHBORS
 
 
 ########################################
@@ -135,11 +149,8 @@ AxialIndex(x::Integer, y::Integer) = AxialIndex((Int(x), Int(y)))
 AxialIndex() = AxialIndex(0, 0)
 AxialIndex(ix::AxialIndex) = ix
 
-Base.show(io::IO, ix::AxialIndex) = show_tuple_wrapper(io, ix)
-
 @tuplewrapper AxialIndex I 2 Int
 
-hexaxes(::Type{AxialIndex}) = (AxialIndex(1, 0), AxialIndex(1, -1), AxialIndex(0, -1))
 hexdist(ix::AxialIndex) = max(abs(ix[1]), abs(ix[2]), abs(ix[1] + ix[2]))
 hexdist(ix1::AxialIndex, ix2::AxialIndex) = max(abs(ix1[1] - ix2[1]), abs(ix1[2] - ix2[2]), abs(ix1[1] + ix1[2] - ix2[1] - ix2[2]))
 cartesian(ix::AxialIndex) = (ix[1] + .5 * ix[2], ix[2] * -root32)
@@ -150,6 +161,13 @@ Base.:+(a::AxialIndex, b::AxialIndex) = AxialIndex(a.I .+ b.I)
 Base.:-(a::AxialIndex, b::AxialIndex) = AxialIndex(a.I .- b.I)
 Base.:*(a::Integer, ix::AxialIndex) = AxialIndex(ix.I .* a)
 Base.:*(ix::AxialIndex, a::Integer) = AxialIndex(ix.I .* a)
+
+const AXIAL_NEIGHBORS = @SArray [AxialIndex(ix[1], ix[2]) for ix in CUBE_NEIGHBORS]
+const AXIAL_AXES = AXIAL_NEIGHBORS[SA[1, 2, 3]]
+
+hexaxes(::Type{AxialIndex}) = AXIAL_AXES
+hexaxes(::Type{AxialIndex}, i::Integer) = AXIAL_AXES[i]
+neighbors(ix::AxialIndex) = Ref(ix) .+ AXIAL_NEIGHBORS
 
 
 ########################################

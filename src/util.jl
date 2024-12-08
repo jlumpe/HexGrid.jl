@@ -23,6 +23,9 @@ macro tuplewrapper(typename, field::Symbol, n::Int, eltype)
 		Base.lastindex(::$T) = $n
 		Base.getindex(x::$T, i) = $xtuple[i]
 
+		Base.:(==)(x1::$T, x2::$T) = x1.$field == x2.$field
+
+		Base.show(io::IO, x::$T) = (print(io, $T); show(io, $xtuple))
 	end
 end
 

@@ -40,6 +40,14 @@ function test_index_general(I::Type{<:VectorHexIndex})
 	ix1 = I(AxialIndex(1, 2))
 	ix2 = I(AxialIndex(3, -4))
 
+	# Equality + validity
+	test_valid_and_equal(I, ix1, (1, 2))
+	test_valid_and_equal(I, ix2, (3, -4))
+	@test ix1 != ix2
+
+	# Zero
+	test_valid_and_equal(I, zero(I), (0, 0))
+
 	# Neighbors
 	nbrs = neighbors(ix1)
 	@test nbrs isa NTuple{I, 6}
@@ -58,6 +66,7 @@ function test_index_general(I::Type{<:VectorHexIndex})
 	@test !isneighbor(ix1, ix1)
 
 	# hexdist
+	@test hexdist(zero(I) == 0)
 	@test hexdist(ix1) == 3
 	@test hexdist(ix2) == 4
 	@test hexdist(ix1, ix2) == 6
@@ -82,23 +91,25 @@ function test_vector_index(I::Type{<:VectorHexIndex})
 
 	# Axes
 	ax = hexaxes(I)
-	@test ax isa NTuple{3, I}
+	@test length(ax) == 3
 
 	test_valid_and_equal(I, ax[1], (1, 0))
 	test_valid_and_equal(I, ax[2], (1, -1))
 	test_valid_and_equal(I, ax[3], (0, -1))
 
-	@test neighbors(origin) == (ax[1], ax[2], ax[3], -ax[1], -ax[2], -ax[3])
+	# hexaxes() + -hexaxes() form a ring around the origin
+	ax2 = vcat(ax, .-ax)
+	@test neighbors(origin) == ax2
 
-	# @test isneighbor(origin, ax[1])
-	# @test isneighbor(origin, ax[2])
-	# @test isneighbor(origin, ax[3])
-	# @test isneighbor(ax[1], ax[2])
-	# @test isneighbor(ax[2], ax[3])
-	# @test isneighbor(ax[3], -ax[1])
-	# @test isneighbor(ax[1], ax[2])
-	# @test isneighbor(ax[2], ax[3])
-	# @test isneighbor(ax[3], -ax[1])
+	for i in 1:6
+		# Adjacent neighbors
+		a1 = ax2[i]
+		a2 = ax2[1 + (i % 6)]
+
+		@test isneighbor(origin, a1)
+		@test isneighbor(origin, a2)
+		@test isneighbor(a1, a2)
+	end
 end
 
 
