@@ -47,28 +47,6 @@ This is the minimum number of jumps between neighbors to get from one cell to an
 hexdist
 
 
-"""
-	cartesian(::HexIndex)::NTuple{2, Float64}
-
-Get cartesian coordinates of cell center.
-"""
-function cartesian end
-
-
-"""
-	cartesian_array(indices)::Matrix{Float64}
-
-Get the x/y coordinates of a collection of indices as a 2-row matrix.
-"""
-function cartesian_array(indices)
-	xy = Array{Float64}(undef, 2, length(indices))
-	for (i, idx) in enumerate(indices)
-		xy[:, i] .= cartesian(idx)
-	end
-	return xy
-end
-
-
 ########################################
 # VectorHexIndex
 ########################################
@@ -122,7 +100,6 @@ CubeIndex(ix::CubeIndex) = ix
 validindex(ix::CubeIndex) = sum(ix.I) == 0
 hexdist(ix::CubeIndex) = maximum(abs, ix)
 hexdist(ix1::CubeIndex, ix2::CubeIndex) = max(abs(ix1[1] - ix2[1]), abs(ix1[2] - ix2[2]), abs(ix1[3] - ix2[3]))
-cartesian(ix::CubeIndex) = (ix[1] + .5 * ix[2], -ix[2] * root32)
 
 Base.zero(::Type{CubeIndex}) = CubeIndex()
 Base.:-(idx::CubeIndex) = CubeIndex(.-idx.I)
@@ -162,7 +139,6 @@ AxialIndex(ix::AxialIndex) = ix
 
 hexdist(ix::AxialIndex) = max(abs(ix[1]), abs(ix[2]), abs(ix[1] + ix[2]))
 hexdist(ix1::AxialIndex, ix2::AxialIndex) = max(abs(ix1[1] - ix2[1]), abs(ix1[2] - ix2[2]), abs(ix1[1] + ix1[2] - ix2[1] - ix2[2]))
-cartesian(ix::AxialIndex) = (ix[1] + .5 * ix[2], ix[2] * -root32)
 
 Base.zero(::Type{AxialIndex}) = AxialIndex()
 Base.:-(idx::AxialIndex) = AxialIndex(.-idx.I)

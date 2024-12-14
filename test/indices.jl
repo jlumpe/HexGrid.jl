@@ -116,30 +116,6 @@ function test_vector_index(I::Type{<:VectorHexIndex})
 end
 
 
-function test_cartesian(I::Type{<:HexIndex})
-	center = AxialIndex(4, -7)
-	cx, cy = cartesian(center)
-
-	for (i, ax) in enumerate(hexaxes(AxialIndex))
-		ix = I(ax)
-
-		angle = (i - 1) * 60
-		ey, ex = sincosd(angle)
-
-		# Test basic axis directions
-		x, y = cartesian(ix)
-		@test isapprox(x, ex)
-		@test isapprox(y, ey)
-
-		# Test summed indices have summed coordinates
-		ix2 = I(center + ax)
-		x2, y2 = cartesian(ix2)
-		@test isapprox(x2, cx + ex)
-		@test isapprox(y2, cy + ey)
-	end
-end
-
-
 @testset "CubeIndex" begin
 	# Type traits
 	@test Base.IteratorSize(CubeIndex) === Base.HasLength()
@@ -164,9 +140,6 @@ end
 
 	# Vector
 	test_vector_index(CubeIndex)
-
-	# Cartesian
-	test_cartesian(CubeIndex)
 end
 
 
@@ -191,9 +164,6 @@ end
 
 	# Vector
 	test_vector_index(AxialIndex)
-
-	# Cartesian
-	test_cartesian(AxialIndex)
 end
 
 

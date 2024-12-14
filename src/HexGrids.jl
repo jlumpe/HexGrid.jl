@@ -3,6 +3,7 @@ Package for working with hexagonal grids.
 """
 module HexGrids
 
+using LinearAlgebra
 using StaticArrays
 
 export HexIndex, AxialIndex, CubeIndex
@@ -10,14 +11,11 @@ export validindex, isneighbor, neighbors, hexdist, hexaxes
 export ArrayShape, HexagonShape, HexArray, HexagonArray
 
 
-const root32 = sqrt(3) / 2
-
-
 include("util.jl")
 include("indices.jl")
 include("shape.jl")
 include("array.jl")
-
+include("cartesian.jl")
 include("Plotly.jl")
 
 
