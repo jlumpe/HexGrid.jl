@@ -1,3 +1,5 @@
+using HexGrids: reindex
+
 
 """
 Test container-like aspects of a HexShape:

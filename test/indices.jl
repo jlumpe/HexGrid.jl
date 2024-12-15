@@ -1,3 +1,4 @@
+using HexGrids: VectorHexIndex
 
 
 function test_tuple_wrapper(x, n::Int, E::Type)
