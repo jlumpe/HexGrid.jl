@@ -15,7 +15,7 @@ include("util.jl")
 include("indices.jl")
 include("shape.jl")
 include("array.jl")
-include("cartesian.jl")
+include("coords.jl")
 include("Plotly.jl")
 
 

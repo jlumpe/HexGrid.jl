@@ -64,7 +64,7 @@ abstract type VectorHexIndex <: HexIndex end
 """
 	hexaxes(::Type{T}) where T <: VectorHexIndex
 
-Get indices representing unit vectors along the three main axes.
+Get indices representing unit vectors along the three main hexagonal axes.
 
 Axes are 0, 60, and 120 degrees from Cartesian x axis.
 """
