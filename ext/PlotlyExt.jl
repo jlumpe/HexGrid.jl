@@ -2,13 +2,14 @@
 
 module PlotlyExt
 
-using HexGrids
 using PlotlyJS
+
+using HexGrids
 import HexGrids.Plotly: hex_scatter, hex_plot
 
 
 function hex_scatter(a::HexArray, extra=(;); kw...)
-	xy = HexGrids.cartesian_array(a.shape)
+	xy = HexGrids.cartesian(a.shape)
 	trace = scatter(
 		mode=:markers,
 		x=xy[1, :],
