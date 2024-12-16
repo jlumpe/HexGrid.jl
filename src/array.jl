@@ -11,7 +11,7 @@ abstract type HexArray{T} end
 
 
 """
-	HexArray{T}(shape::ArrayShape)
+	HexArray{T}(shape::HexShape)
 
 Create a `HexArray` instance with eltype `T` and shape `shape`.
 """
@@ -22,18 +22,18 @@ Base.eltype(::Type{<:HexArray{T}}) where T = T
 
 
 # Basic attributes
-Base.length(a::HexArray) = length(ArrayShape(a))
-Base.keys(a::HexArray) = ArrayShape(a)
+Base.length(a::HexArray) = length(HexShape(a))
+Base.keys(a::HexArray) = HexShape(a)
 
 
-ArrayShape{I}(a::HexArray) where I = reindex(I, ArrayShape(a))
-eachindex(::Type{I}, a::HexArray) where {I <: HexIndex} = ArrayShape{I}(a)
+HexShape{I}(a::HexArray) where I = reindex(I, HexShape(a))
+eachindex(::Type{I}, a::HexArray) where {I <: HexIndex} = HexShape{I}(a)
 
 
 # Default indexing-related stuff
-Base.get(a::HexArray, ix::HexIndex, default) = ix in ArrayShape(a) ? a[ix] : default
+Base.get(a::HexArray, ix::HexIndex, default) = ix in HexShape(a) ? a[ix] : default
 
-Base.checkbounds(::Type{Bool}, a::HexArray, ix::HexIndex) = ix in ArrayShape(a)
+Base.checkbounds(::Type{Bool}, a::HexArray, ix::HexIndex) = ix in HexShape(a)
 
 function Base.checkbounds(a::HexArray, ix::HexIndex)
 	checkbounds(Bool, a, ix) || throw(BoundsError(a, ix))
@@ -47,15 +47,15 @@ Base.iterate(a::HexArray, state) = iterate_proxy(ix -> a[ix], state)
 
 
 """
-	similar(array::HexArray, [element_type::Type], [shape::ArrayShape])
+	similar(array::HexArray, [element_type::Type], [shape::HexShape])
 
 Create a new `HexArray` instance similar to `array`, optionally with a different element type and
 shape. Note that the index type of `shape` may not be retained.
 """
-Base.similar(array::HexArray, element_type::Type, shape::ArrayShape) = HexArray{element_type}(shape)
-Base.similar(array::HexArray, element_type::Type) = similar(array, element_type, ArrayShape(array))
-Base.similar(array::HexArray, shape::ArrayShape) = similar(array, eltype(array), shape)
-Base.similar(array::HexArray) = similar(array, eltype(array), ArrayShape(array))
+Base.similar(array::HexArray, element_type::Type, shape::HexShape) = HexArray{element_type}(shape)
+Base.similar(array::HexArray, element_type::Type) = similar(array, element_type, HexShape(array))
+Base.similar(array::HexArray, shape::HexShape) = similar(array, eltype(array), shape)
+Base.similar(array::HexArray) = similar(array, eltype(array), HexShape(array))
 
 
 ########################################
@@ -86,7 +86,7 @@ HexagonArray{T}(n::Integer) where T = HexagonArray{T}(HexagonShape{AxialIndex}(n
 
 
 # Attributes
-ArrayShape(a::HexagonArray) = a.shape
+HexShape(a::HexagonArray) = a.shape
 Base.keytype(::HexagonArray) = AxialIndex
 Base.keytype(::Type{<:HexagonArray}) = AxialIndex
 

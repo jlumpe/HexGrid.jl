@@ -3,30 +3,32 @@
 ########################################
 
 """
-Shape of a hexagonal array - a set of cells.
+	HexShape{I <: HexIndex}
 
-Acts as a collection of cell indices of type `I``.
+Represents a set of hexagonal cells.
+
+Acts as a collection of cell indices of type `I`.
 """
-abstract type ArrayShape{I <: HexIndex} end
+abstract type HexShape{I <: HexIndex} end
 
-Base.IteratorSize(::Type{<:ArrayShape}) = Base.HasLength()
-Base.eltype(::Type{<:ArrayShape{I}}) where I = I
+Base.IteratorSize(::Type{<:HexShape}) = Base.HasLength()
+Base.eltype(::Type{<:HexShape{I}}) where I = I
 
 
 """
-	neighbors(s::ArrayShape, ix::I)::Vector{I} where I <: HexIndex
+	neighbors(s::HexShape, ix::I)::Vector{I} where I <: HexIndex
 
 Neighbors of a cell that are within the shape.
 """
-neighbors(s::ArrayShape, ix::I) where I <: HexIndex = filter(∈(s), neighbors(ix))
+neighbors(s::HexShape, ix::I) where I <: HexIndex = filter(∈(s), neighbors(ix))
 
 
 """
-	reindex(::Type{I}, s::ArrayShape)::ArrayShape{I}
+	reindex(::Type{I}, s::HexShape)::HexShape{I}
 
-Create a copy of an `ArrayShape` using an alternate index type.
+Create a copy of an `HexShape` using an alternate index type.
 """
-reindex(::Type{I}, shape::ArrayShape{I}) where I = shape
+reindex(::Type{I}, shape::HexShape{I}) where I = shape
 
 
 ########################################
@@ -38,7 +40,7 @@ Array in the shape of a hexagon.
 
 `n` is the side length/radius. Origin is in the center.
 """
-struct HexagonShape{I} <: ArrayShape{I}
+struct HexagonShape{I} <: HexShape{I}
 	n::Int
 	l::Int
 

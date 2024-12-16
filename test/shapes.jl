@@ -8,7 +8,7 @@ Test container-like aspects of a HexShape:
 - Total iterated matches length.
 - in()
 """
-function test_shape_container(shape::ArrayShape{I}) where I
+function test_shape_container(shape::HexShape{I}) where I
 	@test eltype(shape) === I
 
 	seen = Set{I}()

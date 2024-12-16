@@ -8,7 +8,7 @@ using StaticArrays
 
 export HexIndex, AxialIndex, CubeIndex
 export validindex, isneighbor, neighbors, hexdist, hexaxes
-export ArrayShape, HexagonShape, HexArray, HexagonArray
+export HexShape, HexagonShape, HexArray, HexagonArray
 
 
 include("util.jl")

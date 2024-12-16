@@ -3,7 +3,7 @@ Test basic array attributes.
 """
 function test_basic(array::HexArray{T}) where T
 	n = length(array)
-	shape = ArrayShape(array)
+	shape = HexShape(array)
 
 	@test eltype(array) === eltype(typeof(array)) === T
 	@test keytype(array) === keytype(typeof(array)) === eltype(shape)
@@ -78,7 +78,7 @@ end
 function test_is_hexagonarray(a, eltype=nothing, shape=nothing)
 	A = isnothing(eltype) ? HexagonArray : HexagonArray{eltype}
 	@test a isa A
-	isnothing(shape) || @test ArrayShape(a) === shape
+	isnothing(shape) || @test HexShape(a) === shape
 end
 
 
