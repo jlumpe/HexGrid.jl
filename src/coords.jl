@@ -174,3 +174,7 @@ function centers!(out::AbstractMatrix, c::CoordinateSystem, indices)
 end
 
 
+# Aliases
+cartesian(ix::HexIndex) = center(CartesianCoords(), ix)
+cartesian(ixs) = centers(CartesianCoords(), ixs)
+cartesian!(out, ixs) = centers!(out, CartesianCoords(), ixs)
