@@ -3,75 +3,102 @@
 ########################################
 
 """
+	HexArray{T}
+
 Type which stores values for a set of hex cells.
 """
-abstract type HexArray{T, I} end
+abstract type HexArray{T} end
 
-Base.length(a::HexArray) = length(ArrayShape(a))
+
+"""
+	HexArray{T}(shape::ArrayShape)
+
+Create a `HexArray` instance with eltype `T` and shape `shape`.
+"""
+
+# Type traits
 Base.IteratorSize(::Type{<:HexArray}) = Base.HasLength()
 Base.eltype(::Type{<:HexArray{T}}) where T = T
-Base.keytype(::Type{<:HexArray{T, I}}) where {T, I} = I
-Base.keytype(a::HexArray) = keytype(typeof(a))
+
+
+# Basic attributes
+Base.length(a::HexArray) = length(ArrayShape(a))
 Base.keys(a::HexArray) = ArrayShape(a)
 
 
-"""
-	reindex(a::HexArray, I::Type{<:HexIndex})
-
-Create a copy of `a` using the same data but a different index type `I`.
-"""
-reindex
+ArrayShape{I}(a::HexArray) where I = reindex(I, ArrayShape(a))
+eachindex(::Type{I}, a::HexArray) where {I <: HexIndex} = ArrayShape{I}(a)
 
 
-"""
-	ArrayShape(a::HexArray{T, I})::ArrayShape{I}
-	ArrayShape(a::HexArray, index_type::Type{I})::ArrayShape{I}
+# Default indexing-related stuff
+Base.get(a::HexArray, ix::HexIndex, default) = ix in ArrayShape(a) ? a[ix] : default
 
-Get the shape (set of cells) of a `HexArray`.
-"""
-ArrayShape(a::HexArray, I::Type{<:HexIndex}) = reindex(ArrayShape(a), I)
+Base.checkbounds(::Type{Bool}, a::HexArray, ix::HexIndex) = ix in ArrayShape(a)
 
-
-Base.checkbounds(::Type{Bool}, a::HexArray, i::HexIndex) = i in ArrayShape(a)
-
-function Base.checkbounds(a::HexArray, i::HexIndex)
-	checkbounds(Bool, a, i) || throw(BoundsError(a, i))
+function Base.checkbounds(a::HexArray, ix::HexIndex)
+	checkbounds(Bool, a, ix) || throw(BoundsError(a, ix))
 	nothing
 end
+
+
+# Default iterate
+Base.iterate(a::HexArray) = iterate(a, (keys(a),))
+Base.iterate(a::HexArray, state) = iterate_proxy(ix -> a[ix], state)
+
+
+"""
+	similar(array::HexArray, [element_type::Type], [shape::ArrayShape])
+
+Create a new `HexArray` instance similar to `array`, optionally with a different element type and
+shape. Note that the index type of `shape` may not be retained.
+"""
+Base.similar(array::HexArray, element_type::Type, shape::ArrayShape) = HexArray{element_type}(shape)
+Base.similar(array::HexArray, element_type::Type) = similar(array, element_type, ArrayShape(array))
+Base.similar(array::HexArray, shape::ArrayShape) = similar(array, eltype(array), shape)
+Base.similar(array::HexArray) = similar(array, eltype(array), ArrayShape(array))
 
 
 ########################################
 # HexagonArray
 ########################################
 
-struct HexagonArray{T, I, A<:AbstractMatrix} <: HexArray{T, I}
-	shape::HexagonShape{I}
+"""
+	HexagonArray{T, A<:AbstractMatrix} <: HexArray{T}
+
+A `HexArray` with shape [`HexagonShape`](@ref).
+"""
+struct HexagonArray{T, A<:AbstractMatrix} <: HexArray{T}
+	shape::HexagonShape{AxialIndex}
 	array::A
 
 	function HexagonArray(shape::HexagonShape, array::AbstractMatrix)
-		return new{eltype(array), eltype(shape), typeof(array)}(shape, array)
+		return new{eltype(array), typeof(array)}(reindex(AxialIndex, shape), array)
 	end
 end
 
-function HexagonArray{T}(shape::HexagonShape{I}) where {T, I}
+# Constructors
+function HexagonArray{T}(shape::HexagonShape) where {T}
 	w = 2 * shape.n - 1
 	array = Matrix{T}(undef, w, w)
 	return HexagonArray(shape, array)
 end
-HexagonArray{T, I}(n::Int) where {T, I} = HexagonArray{T}(HexagonShape{I}(n))
-HexagonArray{T}(n::Int) where T = HexagonArray{T, AxialIndex}(n)
+HexagonArray{T}(n::Integer) where T = HexagonArray{T}(HexagonShape{AxialIndex}(n))
 
+
+# Attributes
 ArrayShape(a::HexagonArray) = a.shape
-reindex(a::HexagonArray, I::Type{<:HexIndex}) = HexagonArray{eltype(a)}(reindex(a.shape, I), a.array)
+Base.keytype(::HexagonArray) = AxialIndex
+Base.keytype(::Type{<:HexagonArray}) = AxialIndex
 
-Base.similar(a::HexagonArray, element_type::Type=eltype(a)) = HexagonArray{element_type, keytype(a)}(a.n)
+
+# Alternate creation methods
+HexArray{T}(shape::HexagonShape) where T = HexagonArray{T}(shape)
 Base.copy(a::HexagonArray) = HexagonArray(a.shape, copy(a.array))
 Base.deepcopy(a::HexagonArray) = HexagonArray(a.shape, deepcopy(a.array))
 
-function Base.fill!(a::HexagonArray, v)
-	fill!(a.array, v)
-	return a
-end
+
+# Mutability
+Base.fill!(a::HexagonArray, v) = (fill!(a.array, v); a)
 
 function _arrayindex(a::HexagonArray, ix::HexIndex)
 	@boundscheck checkbounds(a, ix)
@@ -89,6 +116,3 @@ Base.@propagate_inbounds function Base.setindex!(a::HexagonArray, v, ix::HexInde
 	a.array[cix] = v
 	return a
 end
-
-Base.iterate(a::HexagonArray) = iterate(a, (ArrayShape(a, AxialIndex),))
-Base.iterate(a::HexagonArray, state) = iterate_proxy(i -> a[i], state)
