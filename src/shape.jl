@@ -40,22 +40,28 @@ Array in the shape of a hexagon.
 """
 struct HexagonShape{I} <: ArrayShape{I}
 	n::Int
+	l::Int
 
 	function HexagonShape{I}(n::Int) where I
 		n > 0 || throw(ArgumentError("n must be positive"))
-		return new{I}(n)
+		l = 3 * n * (n - 1) + 1
+		return new{I}(n, l)
 	end
 end
 
 HexagonShape(n::Int) = HexagonShape{AxialIndex}(n)
 
+reindex(::Type{I}, s::HexagonShape) where I <: HexIndex = HexagonShape{I}(s.n)
+
+
+Base.show(io::IO, s::HexagonShape) = print(io, typeof(s), "(", s.n, ")")
+
 function Base.in(ix::HexIndex, s::HexagonShape)
 	validindex(ix) && hexdist(ix) < s.n
 end
 
-reindex(::Type{I}, s::HexagonShape) where I <: HexIndex = HexagonShape{I}(s.n)
+Base.length(s::HexagonShape) = s.l
 
-Base.length(s::HexagonShape) = 3 * s.n * (s.n - 1) + 1
 
 function Base.iterate(s::HexagonShape{I}) where I
 	nm1 = s.n - 1
