@@ -22,11 +22,11 @@ neighbors(s::ArrayShape, ix::I) where I <: HexIndex = filter(∈(s), neighbors(i
 
 
 """
-	reindex(s::ArrayShape, ::Type{I})::ArrayShape{I}
+	reindex(::Type{I}, s::ArrayShape)::ArrayShape{I}
 
 Create a copy of an `ArrayShape` using an alternate index type.
 """
-reindex
+reindex(::Type{I}, shape::ArrayShape{I}) where I = shape
 
 
 ########################################
@@ -53,7 +53,7 @@ function Base.in(ix::HexIndex, s::HexagonShape)
 	validindex(ix) && hexdist(ix) < s.n
 end
 
-reindex(s::HexagonShape, ::Type{I}) where I <: HexIndex = HexagonShape{I}(s.n)
+reindex(::Type{I}, s::HexagonShape) where I <: HexIndex = HexagonShape{I}(s.n)
 
 Base.length(s::HexagonShape) = 3 * s.n * (s.n - 1) + 1
 

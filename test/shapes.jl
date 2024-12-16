@@ -66,5 +66,6 @@ end
 	@test isempty(neighbors(s, ix3))
 
 	# Reindexing
-	@test reindex(s, CubeIndex) === HexagonShape{CubeIndex}(3)
+	@test reindex(AxialIndex, s) === s
+	@test reindex(CubeIndex, s) === HexagonShape{CubeIndex}(3)
 end
