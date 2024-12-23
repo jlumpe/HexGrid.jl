@@ -16,6 +16,7 @@ include("indices.jl")
 include("shape.jl")
 include("array.jl")
 include("coords.jl")
+include("geom.jl")
 include("Plotly.jl")
 
 
