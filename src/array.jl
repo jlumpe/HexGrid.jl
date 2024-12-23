@@ -80,6 +80,99 @@ end
 
 
 ########################################
+# Broadcasting
+########################################
+
+"""
+Broadcast style for [`HexArray`](@ref)s.
+"""
+struct HexBroadcastStyle <: Base.BroadcastStyle end
+
+# Combine with scalar broadcasting
+Broadcast.result_style(::HexBroadcastStyle, ::Broadcast.AbstractArrayStyle{0}) = HexBroadcastStyle()
+Broadcast.result_style(::Broadcast.AbstractArrayStyle{0}, ::HexBroadcastStyle) = HexBroadcastStyle()
+
+
+"""
+Wrapper around a `HexArray` that behaves as a standard 1-d vector.
+
+Used to wrap a `HexArray` for broadcasting operations if the array type supports indexing by
+integers.
+"""
+struct LinearizedHexArray{T, A <: HexArray{T}} <: AbstractVector{T}
+	array::A
+
+	LinearizedHexArray(array::HexArray) = new{eltype(array), typeof(array)}(array)
+end
+
+Base.length(la::LinearizedHexArray) = length(la.array)
+HexShape(la::LinearizedHexArray) = HexShape(la.array)
+Base.getindex(la::LinearizedHexArray, i::Integer) = la.array[i]
+
+
+"""
+Wrapper around a standard `Vector` of values with a `HexShape` attached.
+
+This is used to annotate values collected from a `HexArray` with shape information for use in
+broadcasting when the array type does not support indexing by integers.
+"""
+struct ShapedVector{T, S <: HexShape} <: AbstractVector{T}
+	shape::S
+	values::Vector{T}
+
+	ShapedVector(shape::HexShape, values::Vector) = new{eltype(values), typeof(shape)}(shape, values)
+end
+
+Base.length(sv::ShapedVector) = length(sv.values)
+HexShape(sv::ShapedVector) = sv.shape
+Base.getindex(sv::ShapedVector, i::Integer) = sv.values[i]
+
+
+for T in [LinearizedHexArray, ShapedVector]
+	@eval begin
+		Base.size(x::$T) = (length(x),)
+		Base.IndexStyle(::Type{<:$T}) = IndexLinear()
+		Base.BroadcastStyle(::Type{<:$T}) = HexBroadcastStyle()
+	end
+end
+
+
+"""
+Collect values of a `HexArray` into a standard vector that is annotated with the original shape
+information.
+"""
+hexcollect(T::Type, array::HexArray) = ShapedVector(HexShape(array), collect(T, array))
+hexcollect(array::HexArray) = hexcollect(eltype(array), array)
+
+
+# Default to eagerly collecting all values into a vector
+# HexArray subtypes that support integer indexing should return a LinearizedHexArray
+Base.broadcastable(array::HexArray) = hexcollect(array)
+
+
+broadcast_shape(::Any) = nothing
+broadcast_shape(array::LinearizedHexArray) = HexShape(array)
+broadcast_shape(array::ShapedVector) = HexShape(array)
+
+
+function Base.similar(bc::Broadcast.Broadcasted{HexBroadcastStyle}, eltype::Type)
+	arg_shapes = map(broadcast_shape, bc.args)
+	out_shape = broadcast_shapes(arg_shapes...)
+	@assert out_shape isa HexShape
+	return HexArray{eltype}(out_shape)
+end
+
+
+function Base.copyto!(array::HexArray, bc::Broadcast.Broadcasted{HexBroadcastStyle})
+	@assert size(bc) == (length(array),)
+	for (i, ix) in enumerate(keys(array))
+		array[ix] = bc[i]
+	end
+	array
+end
+
+
+########################################
 # HexagonArray
 ########################################
 
