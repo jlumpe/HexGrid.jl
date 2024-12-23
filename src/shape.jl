@@ -91,6 +91,7 @@ function Base.in(ix::HexIndex, s::HexagonShape)
 	validindex(ix) && hexdist(ix) < s.n
 end
 
+Base.hasfastin(::Type{<:HexagonShape}) = true
 Base.length(s::HexagonShape) = s.l
 
 
