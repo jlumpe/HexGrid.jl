@@ -69,6 +69,16 @@ Base.similar(array::HexArray, shape::HexShape) = similar(array, eltype(array), s
 Base.similar(array::HexArray) = similar(array, eltype(array), HexShape(array))
 
 
+# Default copyto! (slow, subtypes should override)
+function Base.copyto!(dest::HexArray, src::HexArray)
+	keys(dest) == keys(shape) || error("Source and destination arrays must have the same shape")
+	for (ix, v) in pairs(src)
+		dest[ix] = v
+	end
+	dest
+end
+
+
 ########################################
 # HexagonArray
 ########################################
@@ -126,4 +136,10 @@ Base.@propagate_inbounds function Base.setindex!(a::HexagonArray, v, ix::HexInde
 	cix = _arrayindex(a, ix)
 	a.array[cix] = v
 	return a
+end
+
+function Base.copyto!(dest::HexagonArray, src::HexagonArray)
+	dest.shape == src.shape || error("Source and destination arrays must have the same shape")
+	copyto!(dest.array, src.array)
+	dest
 end
