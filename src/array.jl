@@ -30,6 +30,17 @@ HexShape{I}(a::HexArray) where I = reindex(I, HexShape(a))
 eachindex(::Type{I}, a::HexArray) where {I <: HexIndex} = HexShape{I}(a)
 
 
+function Base.:(==)(a1::HexArray, a2::HexArray)
+	keys(a1) == keys(a2) || return false
+	all(a1[ix] == a2[ix] for ix in keys(a1))
+end
+
+function Base.isequal(a1::HexArray, a2::HexArray)
+	keys(a1) == keys(a2) || return false
+	all(isequal(a1[ix] == a2[ix]) for ix in keys(a1))
+end
+
+
 # Default indexing-related stuff
 Base.get(a::HexArray, ix::HexIndex, default) = ix in HexShape(a) ? a[ix] : default
 
